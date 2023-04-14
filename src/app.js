@@ -49,5 +49,20 @@ app.get('/participants', async (req, res) => {
       }
 });
 
+app.post("/messages", async(req, res)=> {
+    const {to, text, type}=req.body;
+    const from = "" // implementar
+    // inserir validações
+    try{
+        await db.collection("messages").insertOne(message);
+        //tratar a data dayjs
+        const msg= { from, to, text, type, time: 'HH:mm:ss' }
+        await db.collection("messages").insertOne(msg);
+        res.sendStatus(201);
+    } catch (err){
+        res.status(500).send(err.message)
+    }
+})
+
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
