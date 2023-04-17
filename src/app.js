@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { MongoClient, ObjectId } from 'mongodb';
 import joi from 'joi';
 import dayjs from 'dayjs';
+import {stripHtml} from 'string-strip-html';
 dotenv.config();
 
 const app = express();
@@ -26,7 +27,8 @@ try{
 const db = mongoClient.db(); */
 
 app.post("/participants", async(req, res)=> {
-    const nameObj=req.body;
+    const nameObj = req.body;
+    ///const nameObj=req.body;
     const name=req.body.name;
     // validações
     const partSchema = joi.object({
@@ -77,7 +79,9 @@ app.post('/messages', async(req, res)=> {
     const msg= { from, to, text, type, time }
     // validações
     const partFora= await db.collection('participants').find({ name: { $eq: user } }).toArray();
-    if(!partFora) return res.status(422).send(errors);
+    if(partFora[0]===undefined){
+        return res.status(422).send('Usuário não cadastrado!')
+    }
     const msgSchema = joi.object({
         to: joi.string().required(),
         text: joi.string().required(),
@@ -100,9 +104,10 @@ app.post('/messages', async(req, res)=> {
 
 app.get('/messages', async (req, res) => {
     const user = req.headers.user; 
+   // const limit = parseInt(req.query.limit);
     const limit = parseInt(req.query.limit);
     let userMsg=[];
-    if (limit <= 0 || typeof limit === 'string') return res.sendStatus(422)
+    if (limit <= 0 || isNaN(limit)) return res.sendStatus(422)
     try {
       const msg = await db.collection('messages').find().toArray();
       for(let i=0; i<msg.length; i++){
@@ -182,7 +187,7 @@ app.delete('/messages/:id', async (req, res) => {
       const msgToDelete = await db.collection('messages').find({ _id: {$eq: new ObjectId(id)}}).toArray();
       if (msgToDelete[0].from !== user) return res.sendStatus(401)
       await db.collection('messages').deleteOne({ _id: new ObjectId(id)})
-      res.sendStatus(201);
+      res.sendStatus(200);
     } catch (err) {
         console.error(err);
         res.sendStatus(404);
