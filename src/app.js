@@ -107,7 +107,7 @@ app.get('/messages', async (req, res) => {
     const user = req.headers.user; 
     const limit = parseInt(req.query.limit);
     let userMsg=[];
-    if (limit <= 0 || typeof limit !== 'number') return res.sendStatus(422)
+    if (limit <= 0 || typeof limit === 'string') return res.sendStatus(422)
     try {
       const msg = await db.collection('messages').find().toArray();
       for(let i=0; i<msg.length; i++){
