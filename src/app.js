@@ -147,35 +147,37 @@ app.post("/status", async(req, res)=> {
 //const antes = dayjs().subtract(10, 'second').format('HH:mm:ss');
 const timeNow = Date.now();
 const timeOut = timeNow - 10000;
+const time = dayjs().format('HH:mm:ss');
 
+//para remover os inativos
 const inativeRemove = async () => {
     //console.log("Entrou no status")
     try{
-        const partFora= await db.collection('participants').deleteMany({ lastStatus: { $lte: timeOut } });
-        console.log(`${partFora.deletedCount} participantes removidos`);
+        const partFora= await db.collection('participants').find({ lastStatus: { $lt: timeOut } }).toArray();
+        for(let i=0; i<partFora.length; i++){
+            const msgExit={
+                    from: partFora[i].name,
+                    to: 'Todos',
+                    text: 'sai da sala...',
+                    type: 'status',
+                    time: time
+            }
+            try{
+                console.log("msg", msgExit)
+                await db.collection('messages').insertOne(msgExit);
+            } catch (err){
+                console.log(err.message)
+            }
+        }
+        const deletePartFora= await db.collection('participants').deleteMany({ lastStatus: { $lt: timeOut } });
+        console.log(`${deletePartFora.deletedCount} participantes removidos`);
+        console.log(partFora);
     }catch (err){
             console.log(err.message)
     }
 }
 setInterval(inativeRemove, 15000);
     
-    /* app.get('/participants', async (req, res) => {
-        try {
-            const participants = await db.collection('participants').find().toArray();
-            console.log(participants)
-            for(let i=0; i<participants.length; i++){
-                if(participants[i].lastStatus<timeOut){
-                    console.log("Excluir", participants[i].lastStatus, timeOut)
-                }
-            }   
-            res.send(console.log(participants));
-        }catch (err) {
-            console.error(err);
-            res.sendStatus(500);
-        }
-    }); */
-
-
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
 
