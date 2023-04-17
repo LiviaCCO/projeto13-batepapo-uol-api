@@ -28,8 +28,6 @@ const db = mongoClient.db(); */
 app.post("/participants", async(req, res)=> {
     const nameObj=req.body;
     const name=req.body.name;
-
-    //console.log(name)
     // validações
     const partSchema = joi.object({
         name: joi.string().required(),
@@ -44,13 +42,12 @@ app.post("/participants", async(req, res)=> {
         const participants = await db.collection('participants').find().toArray();
         
         if(participants.find(p=>p.name===name)){
-            console.log("Entrou")
             return res.status(409).send('Usuário já cadastrado!');
         }
         //Gerando a data:
         const lastStatus = Date.now();
         const time = dayjs().format('HH:mm:ss'); 
-        const participant = { name, lastStatus}; 
+        const participant = {name, lastStatus}; 
         console.log(participant)    
         await db.collection("participants").insertOne(participant);
         //tratar a data dayjs
@@ -94,8 +91,6 @@ app.post('/messages', async(req, res)=> {
         return res.status(422).send(errors);
     }
     try{
-        console.log("msg", msg)
-        //const msg= { from, to, text, type, time }
         await db.collection('messages').insertOne(msg);
         res.sendStatus(201);
     } catch (err){
@@ -116,7 +111,6 @@ app.get('/messages', async (req, res) => {
         }
       }
       if(typeof limit === 'number' && limit >0) return res.send(userMsg.slice(-limit));
-
       res.send(userMsg);
       } catch (err) {
         console.error(err);
@@ -126,7 +120,6 @@ app.get('/messages', async (req, res) => {
 
 app.post("/status", async(req, res)=> {
     const user = req.headers.user; 
-    console.log("usuario", user)
     if (!user || user===undefined) return res.sendStatus(404);
     
     try{
