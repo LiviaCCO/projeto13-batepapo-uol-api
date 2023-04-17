@@ -26,12 +26,15 @@ try{
 const db = mongoClient.db(); */
 
 app.post("/participants", async(req, res)=> {
-    const name=req.body;
+    const nameObj=req.body;
+    const name=req.body.name;
+
+    //console.log(name)
     // validações
     const partSchema = joi.object({
         name: joi.string().required(),
     });
-    const validation = partSchema.validate(name, { abortEarly: false });
+    const validation = partSchema.validate(nameObj, { abortEarly: false });
     if (validation.error) {
         const errors = validation.error.details.map((detail) => detail.message);
         return res.status(422).send(errors);
@@ -40,15 +43,15 @@ app.post("/participants", async(req, res)=> {
     try {
         const participants = await db.collection('participants').find().toArray();
         
-        if(participants.find(p=>p.name.name===name.name)){
+        if(participants.find(p=>p.name===name)){
             console.log("Entrou")
             return res.status(409).send('Usuário já cadastrado!');
         }
         //Gerando a data:
         const lastStatus = Date.now();
-        const time = dayjs().format('HH:mm:ss');
-            
-        const participant = { name, lastStatus};     
+        const time = dayjs().format('HH:mm:ss'); 
+        const participant = { name, lastStatus}; 
+        console.log(participant)    
         await db.collection("participants").insertOne(participant);
         //tratar a data dayjs
         const message= { from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time }
@@ -123,7 +126,7 @@ app.post("/status", async(req, res)=> {
     
     try{
         const participants = await db.collection('participants').find().toArray();
-        const userInList = participants.find(u=>u.name.name===user);
+        const userInList = participants.find(u=>u.name===user);
         // se não houver usuário na lista
         if(!userInList) return res.sendStatus(404);
         
@@ -145,11 +148,16 @@ app.post("/status", async(req, res)=> {
 const timeNow = Date.now();
 const timeOut = timeNow - 10000;
 
-/* function status(){
-    console.log("Entrou no status")
-    const partFora= db.collection.find({ field: { $lte: value } });
-    console.log(partFora)
-} */
+const inativeRemove = async () => {
+    //console.log("Entrou no status")
+    try{
+        const partFora= await db.collection('participants').deleteMany({ lastStatus: { $lte: timeOut } });
+        console.log(`${partFora.deletedCount} participantes removidos`);
+    }catch (err){
+            console.log(err.message)
+    }
+}
+setInterval(inativeRemove, 15000);
     
     /* app.get('/participants', async (req, res) => {
         try {
@@ -166,10 +174,8 @@ const timeOut = timeNow - 10000;
             res.sendStatus(500);
         }
     }); */
-/* }
-status(); */
+
 
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
 
-//status();
