@@ -79,12 +79,14 @@ app.post('/messages', async(req, res)=> {
     const time = dayjs().format('HH:mm:ss');
     const msg= { from, to, text, type, time }
     // validações
+    const partFora= await db.collection('participants').find({ name: { $eq: user } }).toArray();
+    if(!partFora) return res.status(422).send(errors);
     const msgSchema = joi.object({
         to: joi.string().required(),
         text: joi.string().required(),
         from: joi.string().required(), //DEVE SER PARTICIPANTE ATIVO
         time: joi.string().required(),
-        type: joi.string().valid("message","provate_message").required(), // deve ser message ou private_message
+        type: joi.string().valid("message","private_message").required(), // deve ser message ou private_message
     });
     const validation = msgSchema.validate(msg, { abortEarly: false });
     if (validation.error) {
@@ -104,8 +106,6 @@ app.post('/messages', async(req, res)=> {
 app.get('/messages', async (req, res) => {
     const user = req.headers.user; 
     const limit = parseInt(req.query.limit);
-    console.log("user", user)
-    console.log('limit', limit)
     let userMsg=[];
     if (limit <= 0 || typeof limit !== 'number') return res.sendStatus(422)
     try {
@@ -148,14 +148,12 @@ app.post("/status", async(req, res)=> {
     }
 })
 
-
-//const antes = dayjs().subtract(10, 'second').format('HH:mm:ss');
-const timeNow = Date.now();
-const timeOut = timeNow - 10000;
-const time = dayjs().format('HH:mm:ss');
-
 //para remover os inativos
-const inativeRemove = async () => {
+const inactiveRemove = async () => {
+    //const antes = dayjs().subtract(10, 'second').format('HH:mm:ss');
+    const timeNow = Date.now();
+    const timeOut = timeNow - 10000;
+    const time = dayjs().format('HH:mm:ss');
     //console.log("Entrou no status")
     try{
         const partFora= await db.collection('participants').find({ lastStatus: { $lt: timeOut } }).toArray();
@@ -181,7 +179,7 @@ const inativeRemove = async () => {
             console.log(err.message)
     }
 }
-setInterval(inativeRemove, 15000);
+setInterval(inactiveRemove, 15000);
     
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
