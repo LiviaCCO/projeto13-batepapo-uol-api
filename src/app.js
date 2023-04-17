@@ -173,6 +173,22 @@ const inactiveRemove = async () => {
     }
 }
 setInterval(inactiveRemove, 15000);
+
+//para remover mensagens
+app.delete('/messages/:id', async (req, res) => {
+    const user = req.headers.user; 
+    const {id} = req.params;
+    try {
+      const msgToDelete = await db.collection('messages').find({ _id: {$eq: new ObjectId(id)}}).toArray();
+      if (msgToDelete[0].from !== user) return res.sendStatus(401)
+      await db.collection('messages').deleteOne({ _id: new ObjectId(id)})
+      res.sendStatus(201);
+    } catch (err) {
+        console.error(err);
+        res.sendStatus(404);
+    }
+});
+
     
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
