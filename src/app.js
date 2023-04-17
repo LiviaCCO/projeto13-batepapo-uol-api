@@ -145,11 +145,11 @@ app.post("/status", async(req, res)=> {
 const timeNow = Date.now();
 const timeOut = timeNow - 10000;
 
-function status(){
+/* function status(){
     console.log("Entrou no status")
     const partFora= db.collection.find({ field: { $lte: value } });
     console.log(partFora)
-}
+} */
     
     /* app.get('/participants', async (req, res) => {
         try {
@@ -172,4 +172,4 @@ status(); */
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
 
-status();
+//status();
