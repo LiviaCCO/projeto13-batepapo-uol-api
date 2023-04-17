@@ -103,8 +103,11 @@ app.post('/messages', async(req, res)=> {
 
 app.get('/messages', async (req, res) => {
     const user = req.headers.user; 
-    console.log(user)
+    const limit = parseInt(req.query.limit);
+    console.log("user", user)
+    console.log('limit', limit)
     let userMsg=[];
+    if (limit <= 0 || typeof limit !== 'number') return res.sendStatus(422)
     try {
       const msg = await db.collection('messages').find().toArray();
       for(let i=0; i<msg.length; i++){
@@ -112,6 +115,8 @@ app.get('/messages', async (req, res) => {
             userMsg.push(msg[i]);
         }
       }
+      if(typeof limit === 'number' && limit >0) return res.send(userMsg.slice(-limit));
+
       res.send(userMsg);
       } catch (err) {
         console.error(err);
