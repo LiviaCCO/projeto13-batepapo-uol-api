@@ -45,10 +45,10 @@ app.post("/participants", async(req, res)=> {
             return res.status(409).send('Usuário já cadastrado!');
         }
         //Gerando a data:
-        const date = Date.now();
+        const lastStatus = Date.now();
         const time = dayjs().format('HH:mm:ss');
             
-        const participant = { name, lastStatus: date };     
+        const participant = { name, lastStatus};     
         await db.collection("participants").insertOne(participant);
         //tratar a data dayjs
         const message= { from: name, to: 'Todos', text: 'entra na sala...', type: 'status', time }
@@ -81,7 +81,7 @@ app.post('/messages', async(req, res)=> {
         text: joi.string().required(),
         from: joi.string().required(), //DEVE SER PARTICIPANTE ATIVO
         time: joi.string().required(),
-        type: joi.string().required(), // deve ser message ou private_message
+        type: joi.string().valid("message","provate_message").required(), // deve ser message ou private_message
     });
     const validation = msgSchema.validate(msg, { abortEarly: false });
     if (validation.error) {
@@ -145,11 +145,13 @@ app.post("/status", async(req, res)=> {
 const timeNow = Date.now();
 const timeOut = timeNow - 10000;
 
-/* function status(){
+function status(){
     console.log("Entrou no status")
-
+    const partFora= db.collection.find({ field: { $lte: value } });
+    console.log(partFora)
+}
     
-     app.get('/participants', async (req, res) => {
+    /* app.get('/participants', async (req, res) => {
         try {
             const participants = await db.collection('participants').find().toArray();
             console.log(participants)
@@ -169,3 +171,5 @@ status(); */
 
 const PORT = 5000;
 app.listen(PORT, ()=>console.log(`Servidor rodando na porta ${PORT}`));
+
+status();
